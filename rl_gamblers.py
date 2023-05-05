@@ -31,9 +31,7 @@ class Agent(object):
 class Environment(object):
     # initialize agent
 
-
-        
-
+    
 if __name__ == '__main__':
     rnd.seed(42)
 
