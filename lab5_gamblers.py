@@ -9,29 +9,21 @@ either the gambler reaches 0 (reward 0) or 100 (reward 1)
 
 implement uniform random policy
 '''
+
+
 import numpy as np
 import random as rnd
 
 N = 100
-
+p_heads = 0.4 # set probability of heads
 
 class Agent(object):
 
-    '''
-        initialize the state
-    '''
     def __init__(self):
-        self.state = N // 2
         self.values = np.zeros(N + 1)
 
-    def set_state(self, s):
-        self.state = s
-
-    def choose_action(self):
-        return rnd.randrange(1, min(self.state, N - self.state) + 1)
 
 class Environment(object):
-
     def __init__(self, p_heads=0.4):
         self.p_heads = p_heads
 
@@ -40,30 +32,39 @@ class Environment(object):
             next_state = state + action
         else:
             next_state = state - action
-        reward = 1 if next_state == N else 0
+
+        if next_state == 100:
+            reward = 1
+            next_state = 0
+        elif next_state == 0:
+            reward = 0
+        else:
+            reward = 0
+
         return next_state, reward
 
-def exploring_starts(agent, environment, num_episodes):
-    for _ in range(num_episodes):
-        agent.set_state(rnd.randint(1, N - 1))
-        while 0 < agent.state < N:
-            action = agent.choose_action()
-            next_state, reward = environment.step(agent.state, action)
-            agent.values[agent.state] += 0.5 * (reward + agent.values[next_state] - agent.values[agent.state])
-            agent.state = next_state
 
-if __name__ == '__main__':
+def value_iteration(agent, environment, num_iterations):
+    for _ in range(num_iterations):
+        new_values = np.zeros(N + 1)
+        for state in range(1, N):
+            values = []
+            for action in range(1, min(state, N - state) + 1):
+                next_state, reward = environment.step(state, action)
+                values.append(reward + agent.values[next_state])
+            new_values[state] = np.mean(values)  # Uniform random policy
+        agent.values = new_values
+
+
+if __name__ == "__main__":
     rnd.seed(42)
 
-    # create an Agent
     agent = Agent()
-
-    # create an Environment
     environment = Environment()
 
-     # exploring starts
-    num_episodes = 1000
-    exploring_starts(agent, environment, num_episodes)
+    num_iterations = 1000
+    value_iteration(agent, environment, num_iterations)
 
-    # print values
-    print(agent.values[1:-1])
+    print("Values after {} iterations:".format(num_iterations))
+    for i, value in enumerate(agent.values):
+        print("State {}: {:.4f}".format(i, value))
